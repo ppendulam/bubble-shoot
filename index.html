@@ -1,25 +1,16 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Hello Game</title>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/style.css">
+    <title>Phaser React Template</title>
 </head>
+
 <body>
-<script>
-    const config = {
-        type: Phaser.AUTO,
-        width: 800,
-        height: 600,
-        scene: {
-            preload: function () {},
-            create: function () {
-                this.add.text(100, 100, 'Hello Game', { fontSize: '48px', fill: '#ffffff' });
-            }
-        }
-    };
-    const game = new Phaser.Game(config);
-</script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+
 </body>
 </html>
