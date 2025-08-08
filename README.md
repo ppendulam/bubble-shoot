@@ -1,16 +1,13 @@
-# Phaser React TypeScript Template
+# Phaser Angular Template
 
-This is a Phaser 3 project template that uses the React framework and Vite for bundling. It includes a bridge for React to Phaser game communication, hot-reloading for quick development workflow and scripts to generate production-ready builds.
-
-**[This Template is also available as a JavaScript version.](https://github.com/phaserjs/template-react)**
+This is a Phaser 3 project template that uses the Angular framework. It includes a bridge for Angular to Phaser game communication, hot-reloading for quick development workflow and scripts to generate production-ready builds.
 
 ### Versions
 
 This template has been updated for:
 
 - [Phaser 3.90.0](https://github.com/phaserjs/phaser)
-- [React 19.0.0](https://github.com/facebook/react)
-- [Vite 6.3.1](https://github.com/vitejs/vite)
+- [Angular 19.2.0](https://github.com/angular)
 - [TypeScript 5.7.2](https://github.com/microsoft/TypeScript)
 
 ![screenshot](screenshot.png)
@@ -18,6 +15,7 @@ This template has been updated for:
 ## Requirements
 
 [Node.js](https://nodejs.org) is required to install dependencies and run scripts via `npm`.
+[ng cli](https://angular.io/cli) is required to run the project.
 
 ## Available Commands
 
@@ -25,47 +23,48 @@ This template has been updated for:
 |---------|-------------|
 | `npm install` | Install project dependencies |
 | `npm run dev` | Launch a development web server |
-| `npm run build` | Create a production build in the `dist` folder |
+| `npm run build` | Create a production build in the `build` folder |
 | `npm run dev-nolog` | Launch a development web server without sending anonymous data (see "About log.js" below) |
 | `npm run build-nolog` | Create a production build in the `dist` folder without sending anonymous data (see "About log.js" below) |
 
 ## Writing Code
 
-After cloning the repo, run `npm install` from your project directory. Then, you can start the local development server by running `npm run dev`.
+After cloning the repo, run `npm install` from your project directory. Install ng cli with `npm install -g @angular/cli`. Then, you can start the local development server by running `npm run dev`.
 
-The local development server runs on `http://localhost:8080` by default. Please see the Vite documentation if you wish to change this, or add SSL support.
+The local development server runs on `http://localhost:8080` by default. Please see the Angular documentation if you wish to change this, or add SSL support.
 
-Once the server is running you can edit any of the files in the `src` folder. Vite will automatically recompile your code and then reload the browser.
+Once the server is running you can edit any of the files in the `src` folder. Angular will automatically recompile your code and then reload the browser.
 
 ## Template Project Structure
 
 We have provided a default project structure to get you started. This is as follows:
 
-| Path                          | Description                                                                 |
-|-------------------------------|-----------------------------------------------------------------------------|
-| `index.html`                  | A basic HTML page to contain the game.                                     |
-| `src`                         | Contains the React client source code.                                     |
-| `src/main.tsx`                | The main **React** entry point. This bootstraps the React application.      |
-| `src/PhaserGame.tsx`          | The React component that initializes the Phaser Game and acts as a bridge between React and Phaser. |
-| `src/vite-env.d.ts`           | Global TypeScript declarations, providing type information.                |
-| `src/App.tsx`                 | The main React component.                                                  |
-| `src/game/EventBus.ts`        | A simple event bus to communicate between React and Phaser.                |
-| `src/game`                    | Contains the game source code.                                             |
-| `src/game/main.tsx`           | The main **game** entry point. This contains the game configuration and starts the game. |
-| `src/game/scenes/`            | The folder where Phaser Scenes are located.                                |
-| `public/style.css`            | Some simple CSS rules to help with page layout.                            |
-| `public/assets`               | Contains the static assets used by the game.                               |
+| Path                                 | Description                                                |
+|--------------------------------------|------------------------------------------------------------|
+| `public/assets`                      | Game sprites, audio, etc. Served directly at runtime       |
+| `src/index.html`                     | Angular entry point (HTML)                                 |
+| `src/main.ts`                        | Angular application bootstrap                              |
+| `src/style.css`                      | Global layout styles                                       |
+| `src/app/app.component.ts`           | Root Angular component                                     |
+| `src/app/app.component.html`         | HTML template for the app component                        |
+| `src/app/phaser-game.component.ts`   | Bridge between Angular and your Phaser game                |
+| `src/game`                           | Folder containing the game code.                           |
+| `src/game/main.ts`                   | Game bootstrap and configuration                           |
+| `src/game/scenes`                    | Folder with all Phaser game scenes.                        |
+| `src/game/EventBus.ts`               | Angular ↔ Phaser communication bridge                      |
 
-## React Bridge
 
-The `PhaserGame.tsx` component is the bridge between React and Phaser. It initializes the Phaser game and passes events between the two.
+## Angular Bridge
 
-To communicate between React and Phaser, you can use the **EventBus.js** file. This is a simple event bus that allows you to emit and listen for events from both React and Phaser.
+The `phaser-game.component.ts` component is the bridge between Angular and Phaser. It initializes the Phaser game and passes events between the two.
+
+To communicate between Angular and Phaser, you can use the **EventBus.ts** file. This is a simple event bus that allows you to emit and listen for events from both Angular and Phaser.
 
 ```js
-// In React
+// In Angular
 import { EventBus } from './EventBus';
 
+// In any Angular component method
 // Emit an event
 EventBus.emit('event-name', data);
 
@@ -76,20 +75,18 @@ EventBus.on('event-name', (data) => {
 });
 ```
 
-In addition to this, the `PhaserGame` component exposes the Phaser game instance along with the most recently active Phaser Scene using React forwardRef.
-
-Once exposed, you can access them like any regular react reference.
+In addition to this, the `phaser-game` component exposes the Phaser game instance along with the most recently active Phaser Scene. You can pick these up from Angular via `phaserRef = viewChild.required(PhaserGame);` (we explain this later).
 
 ## Phaser Scene Handling
 
-In Phaser, the Scene is the lifeblood of your game. It is where you sprites, game logic and all of the Phaser systems live. You can also have multiple scenes running at the same time. This template provides a way to obtain the current active scene from React.
+In Phaser, the Scene is the lifeblood of your game. It is where you sprites, game logic and all of the Phaser systems live. You can also have multiple scenes running at the same time. This template provides a way to obtain the current active scene from Angular.
 
 You can get the current Phaser Scene from the component event `"current-active-scene"`. In order to do this, you need to emit the event `"current-scene-ready"` from the Phaser Scene class. This event should be emitted when the scene is ready to be used. You can see this done in all of the Scenes in our template.
 
-**Important**: When you add a new Scene to your game, make sure you expose to React by emitting the `"current-scene-ready"` event via the `EventBus`, like this:
+**Important**: When you add a new Scene to your game, make sure you expose to Angular by emitting the `"current-scene-ready"` event via the `EventBus`, like this:
 
 
-```ts
+```js
 class MyScene extends Phaser.Scene
 {
     constructor ()
@@ -107,51 +104,51 @@ class MyScene extends Phaser.Scene
 }
 ```
 
-You don't have to emit this event if you don't need to access the specific scene from React. Also, you don't have to emit it at the end of `create`, you can emit it at any point. For example, should your Scene be waiting for a network request or API call to complete, it could emit the event once that data is ready.
+You don't have to emit this event if you don't need to access the specific scene from Angular. Also, you don't have to emit it at the end of `create`, you can emit it at any point. For example, should your Scene be waiting for a network request or API call to complete, it could emit the event once that data is ready.
 
-### React Component Example
+### Angular Component Example
 
-Here's an example of how to access Phaser data for use in a React Component:
+Here's an example of how to access Phaser data for use in a Angular Component:
 
 ```ts
-import { useRef } from 'react';
-import { IRefPhaserGame } from "./game/PhaserGame";
+import { Component, viewChild } from '@angular/core';
+import { PhaserGame } from '../game/phaser-game.component';
+import { EventBus } from '../game/EventBus';
 
-// In a parent component
-const ReactComponent = () => {
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [PhaserGame],
+  templateUrl: './app.component.html'
+})
+export class AppComponent
+{
 
-    const phaserRef = useRef<IRefPhaserGame>(); // you can access to this ref from phaserRef.current
+    phaserRef = viewChild.required(PhaserGame);
 
-    const onCurrentActiveScene = (scene: Phaser.Scene) => {
-    
-        // This is invoked
+    constructor ()
+    {
+
+        const game = this.phaserRef().game;
+        const scene = this.phaserRef().scene;
+
+        EventBus.on('current-scene-ready', (scene: Phaser.Scene) => {
+            // Handle the ready scene
+        });
 
     }
 
-    return (
-        ...
-        <PhaserGame ref={phaserRef} currentActiveScene={onCurrentActiveScene} />
-        ...
-    );
-
 }
+
 ```
 
-In the code above, you can get a reference to the current Phaser Game instance and the current Scene by creating a reference with `useRef()` and assign to PhaserGame component.
+In the code above, you can get a reference to the current Phaser Game instance and the current Scene by calling `phaserRef = viewChild.required(PhaserGame);`.
 
-From this state reference, the game instance is available via `phaserRef.current.game` and the most recently active Scene via `phaserRef.current.scene`.
+From this component reference, the game instance is available via `this.phaserRef.game` and the most recently active Scene via `this.phaserRef.scene`
 
-The `onCurrentActiveScene` callback will also be invoked whenever the the Phaser Scene changes, as long as you emit the event via the EventBus, as outlined above.
+The `EventBus.on('current-scene-ready')` callback will also be invoked whenever the the Phaser Scene changes, as long as you emit the event via the EventBus, as outlined above.
 
 ## Handling Assets
-
-Vite supports loading assets via JavaScript module `import` statements.
-
-This template provides support for both embedding assets and also loading them from a static folder. To embed an asset, you can import it at the top of the JavaScript file you are using it in:
-
-```js
-import logoImg from './assets/logo.png'
-```
 
 To load static files such as audio files, videos, etc place them into the `public/assets` folder. Then you can use this path in the Loader calls within Phaser:
 
@@ -168,19 +165,19 @@ preload ()
 }
 ```
 
-When you issue the `npm run build` command, all static assets are automatically copied to the `dist/assets` folder.
+When you issue the `npm run build` command, all static assets are automatically copied to the `dist/browser/assets` folder.
 
 ## Deploying to Production
 
 After you run the `npm run build` command, your code will be built into a single bundle and saved to the `dist` folder, along with any other assets your project imported, or stored in the public assets folder.
 
-In order to deploy your game, you will need to upload *all* of the contents of the `dist` folder to a public facing web server.
+In order to deploy your game, you will need to upload *all* of the contents of the `dist/browser` folder to a public facing web server.
 
 ## Customizing the Template
 
-### Vite
+### Angular
 
-If you want to customize your build, such as adding plugin (i.e. for loading CSS or fonts), you can modify the `vite/config.*.mjs` file for cross-project changes, or you can modify and/or create new configuration files and target them in specific npm tasks inside of `package.json`. Please see the [Vite documentation](https://vitejs.dev/) for more information.
+If you want to customize your build, such as adding plugin (i.e. for loading CSS or fonts), you can modify the `angular.json` file for cross-project changes, or you can modify and/or create new configuration files and target them in specific npm tasks inside of `package.json`. Please see the [Angular documentation](https://angular.io/guide/workspace-config) for more information.
 
 ## About log.js
 
@@ -227,6 +224,7 @@ After:
 ```
 
 Either of these will stop `log.js` from running. If you do decide to do this, please could you at least join our Discord and tell us which template you're using! Or send us a quick email. Either will be super-helpful, thank you.
+
 
 ## Join the Phaser Community!
 
