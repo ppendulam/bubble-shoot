@@ -6,26 +6,21 @@ import { Preloader } from './scenes/Preloader';
 import { BubbleDestroyScene } from './scenes/BubbleDestroyScene';
 
 const config: Phaser.Types.Core.GameConfig = {
-    type: Phaser.CANVAS,
+  type: Phaser.AUTO,
+  parent: 'game-container', // will be overwritten by StartGame parent argument
+  backgroundColor: '#2c556aff',
+  scale: {
+    mode: Phaser.Scale.RESIZE,          // important for responsive resizing
+    autoCenter: Phaser.Scale.CENTER_BOTH,
     width: window.innerWidth,
-    parent: 'game-container',
-    height: window.innerHeight,
-     physics: {
-        default: 'arcade',
-        arcade: { debug: false },
-    },
-    scene: [
-        Boot,
-        Preloader,
-        MainMenu,
-        BubbleDestroyScene,
-        GameOver
-    ]
+    height: window.innerHeight
+  },
+  physics: { default: 'arcade', arcade: { debug: false }},
+  scene: [ Boot, Preloader, MainMenu, BubbleDestroyScene, GameOver ]
 };
 
-const StartGame = (parent: string) => {
+// const StartGame = (parent: string) => {
+//   return new Game({ ...config, parent });
+// }
 
-    return new Game({ ...config, parent });
-}
-
-export default StartGame;
+export default config;

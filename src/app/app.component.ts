@@ -1,5 +1,5 @@
 import { Component, viewChild } from '@angular/core';
-import { PhaserGame } from './phaser-game.component';
+import { PhaserGameComponent } from './phaser-game.component';
 import { MainMenu } from '../game/scenes/MainMenu';
 import { CommonModule } from '@angular/common';
 import { EventBus } from '../game/EventBus';
@@ -7,7 +7,7 @@ import { EventBus } from '../game/EventBus';
 @Component({
     selector: 'app-root',
     standalone: true,
-    imports: [CommonModule, PhaserGame],
+    imports: [CommonModule, PhaserGameComponent],
     templateUrl: './app.component.html'
 })
 export class AppComponent
