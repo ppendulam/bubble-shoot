@@ -11,6 +11,16 @@ export class BubbleDestroyScene extends Phaser.Scene {
     private lastBulletTime: number = 0;
     private bulletCooldown: number = 200; // milliseconds
     private bubbleRadius: number = 15;
+    private bubblesDestroyed: number = 0
+    private blackOverlay!: Phaser.GameObjects.Graphics;
+    private blackOverlayAdd: number = 20;
+    private blackOverlayHeight: number = 0;
+    private overlayTimerEvent!: Phaser.Time.TimerEvent;
+    private overlayDescendStart: number = 7000;
+    private overlayDescendDelay: number = 1200;
+    private inputLeft: boolean = false;
+    private inputRight: boolean = false;
+    private inputFire: boolean = false;
 
     constructor() {
         super('BubbleDestroyScene');
@@ -19,6 +29,12 @@ export class BubbleDestroyScene extends Phaser.Scene {
     preload() {
         this.createBarTexture();
         this.createShooterTextures();
+        this.createBlackOverlay();
+    }
+    private createBlackOverlay() {
+        this.blackOverlay = this.add.graphics({ x: 0, y: 0 });
+        this.blackOverlay.fillStyle(0x000000, 1);
+        this.blackOverlay.fillRect(0, 0, this.scale.width, 0);
     }
 
     private createBarTexture() {
@@ -60,11 +76,18 @@ export class BubbleDestroyScene extends Phaser.Scene {
     }
 
     private createBulletTexture(bulletKey: string) {
-        const bulletGraphics = this.add.graphics();
-        bulletGraphics.fillStyle(0xffff00, 1);
-        bulletGraphics.fillCircle(4, 4, 4);
-        bulletGraphics.generateTexture(bulletKey, 8, 8);
+        const bulletSize = 30;
+        const bulletGraphics = this.add.graphics();        
+        bulletGraphics.fillStyle(this.getRandomColor(), 1);
+        bulletGraphics.beginPath();
+        bulletGraphics.moveTo(0, bulletSize);
+        bulletGraphics.lineTo(bulletSize / 2, 0);
+        bulletGraphics.lineTo(bulletSize, bulletSize);
+        bulletGraphics.closePath();
+        bulletGraphics.fillPath();
+        bulletGraphics.generateTexture(bulletKey, bulletSize, bulletSize);
         bulletGraphics.destroy();
+
     }
 
     private getRandomColor(): number {
@@ -99,7 +122,7 @@ export class BubbleDestroyScene extends Phaser.Scene {
 
     create() {
         const { width, height } = this.cameras.main;
-        const upperHalfHeight = height / 2;
+        const halfHeight = height / 2;
         const bubbleDiameter = this.bubbleRadius * 2;
         const shooterSize = 20;
 
@@ -158,8 +181,10 @@ export class BubbleDestroyScene extends Phaser.Scene {
             for (let i = 0; i < count; i++) {
                 let x: number, y: number, tries = 0;
                 do {
+                    const minY = this.blackOverlayHeight + this.bubbleRadius;
+                    const maxY = height - 50 - this.bubbleRadius;
                     x = Phaser.Math.Between(this.bubbleRadius, width - this.bubbleRadius);
-                    y = Phaser.Math.Between(this.bubbleRadius, upperHalfHeight - this.bubbleRadius);
+                    y = Phaser.Math.Between(minY, Math.min(maxY, minY + halfHeight - this.bubbleRadius));
                     tries++;
                 } while (isOverlapping(x, y, this.bubbles) && tries < 100);
 
@@ -182,6 +207,7 @@ export class BubbleDestroyScene extends Phaser.Scene {
         // Spawn initial 10 bubbles
         spawnBubbles(10);
 
+        this.UpdateBlackOverlay();
          // Every 3 seconds, spawn 3 more bubbles
         this.time.addEvent({
             delay: 3000,
@@ -194,7 +220,13 @@ export class BubbleDestroyScene extends Phaser.Scene {
          this.physics.add.collider(this.bullets, this.bubbles, (bullet, bubble) => {
             (bullet as Phaser.Physics.Arcade.Image).disableBody(true, true);
             (bubble as Phaser.Physics.Arcade.Image).destroy();
+            this.bubblesDestroyed++;
+            if (this.bubblesDestroyed >= 50) {
+                this.GameOver('win');
+            }
         }, undefined, this);
+
+        this.createUIButtons()
 
         // Enable cursor keys input
         if (this.input.keyboard) {
@@ -202,7 +234,63 @@ export class BubbleDestroyScene extends Phaser.Scene {
         } else {
             throw new Error('Keyboard input is not available.');
         }
+        this.bubblesDestroyed = 0;
+        
         EventBus.emit('current-scene-ready', this);
+    }
+    private UpdateBlackOverlay() {
+        this.blackOverlayHeight = 0;
+        this.time.delayedCall(this.overlayDescendStart, () => {
+        this.overlayTimerEvent = this.time.addEvent({
+            delay: this.overlayDescendDelay,
+            callback: () => {
+                this.blackOverlayHeight += this.blackOverlayAdd;
+
+                this.blackOverlay.clear();
+                this.blackOverlay.fillStyle(0x000000, 1);
+                this.blackOverlay.fillRect(0, 0, this.scale.width, this.blackOverlayHeight);
+                
+                // if black overlay reaches or passes the bar's Y position
+                if (this.blackOverlayHeight >= this.bar.y - this.bar.height / 2) {
+                    this.GameOver('lose');
+                }
+            },
+            callbackScope: this,
+                loop: true
+            });
+        });
+    }
+    private createUIButtons() {
+        // BUTTON DIMENSIONS & POSITIONS
+        const buttonWidth = 80;
+        const buttonHeight = 80;
+        const screenY = this.scale.height - buttonHeight - 10; // 10px margin from bottom
+        // LEFT BUTTON
+        const leftButton = this.add.rectangle(50, screenY, buttonWidth, buttonHeight, 0x444444).setInteractive().setScrollFactor(0);
+        // RIGHT BUTTON
+        const rightButton = this.add.rectangle(this.scale.width - 50, screenY, buttonWidth, buttonHeight, 0x444444).setInteractive().setScrollFactor(0);
+        // FIRE BUTTON
+        const fireButton = this.add.rectangle(this.scale.width/2, screenY, buttonWidth, buttonHeight, 0xff4444).setInteractive().setScrollFactor(0);
+
+        // State flags so you can access from `update`
+        this.inputLeft = false;
+        this.inputRight = false;
+        this.inputFire = false;
+
+        // LEFT events
+        leftButton.on('pointerdown', () => { this.inputLeft = true; });
+        leftButton.on('pointerup', () => { this.inputLeft = false; });
+        leftButton.on('pointerout', () => { this.inputLeft = false; });
+
+        // RIGHT events
+        rightButton.on('pointerdown', () => { this.inputRight = true; });
+        rightButton.on('pointerup', () => { this.inputRight = false; });
+        rightButton.on('pointerout', () => { this.inputRight = false; });
+
+        // FIRE events
+        fireButton.on('pointerdown', () => { this.inputFire = true; });
+        fireButton.on('pointerup', () => { this.inputFire = false; });
+        fireButton.on('pointerout', () => { this.inputFire = false; });
     }
 
     override update() {
@@ -210,10 +298,14 @@ export class BubbleDestroyScene extends Phaser.Scene {
         this.recycleBullets();
         // Stop any previous horizontal movement
         // this.bar.setVelocityX(0);
+        
+        let moveLeft = this.cursors.left?.isDown || this.inputLeft;
+        let moveRight = this.cursors.right?.isDown || this.inputRight;
+        let fire = this.cursors.space?.isDown || this.inputFire;
 
-        if (this.cursors.left?.isDown) {
+        if (moveLeft) {
             this.bar.setVelocityX(-300);
-        } else if (this.cursors.right?.isDown) {
+        } else if (moveRight) {
             this.bar.setVelocityX(300);
         }
         // else if (this.cursors.up?.isDown){
@@ -230,17 +322,37 @@ export class BubbleDestroyScene extends Phaser.Scene {
         this.rightShooter.y = this.bar.y - this.leftShooter.width;
 
         const now = this.time.now;
-        if (this.cursors.space?.isDown && now - this.lastBulletTime > this.bulletCooldown) {
+        if (fire && now - this.lastBulletTime > this.bulletCooldown) {
             const leftBullet = this.bullets.get();
             this.shootBullet(leftBullet, this.leftShooter.x, this.leftShooter.y);
             const rightBullet = this.bullets.get();
             this.shootBullet(rightBullet, this.rightShooter.x, this.rightShooter.y);
             this.lastBulletTime = now;
         }
+
+        // Destroy bubbles below the overlay line
+        this.bubbles.children.each((bubble) => {
+            const bubbleImage = bubble as Phaser.Physics.Arcade.Image;
+            if (bubbleImage.y <= this.blackOverlayHeight) {
+                bubbleImage.destroy();
+            }
+            return null;
+        })
+         // Destroy bullets below the overlay line
+        this.bullets.children.each((bullet) => {
+            const bulletImage = bullet as Phaser.Physics.Arcade.Image;
+            if (bulletImage.active && bulletImage.y <= this.blackOverlayHeight) {
+                bulletImage.disableBody(true, true);
+            }
+            return null;
+        });
     }
 
-    GameOver(){
-        this.scene.start('GameOver');
+    GameOver(gameStatus: string) {
+    if (this.overlayTimerEvent) {
+        this.overlayTimerEvent.remove(false);
+    }
+        this.scene.start('GameOver', { result: gameStatus });
     }
     changeScene ()
     {

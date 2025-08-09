@@ -5,14 +5,11 @@ import { AUTO, Game } from 'phaser';
 import { Preloader } from './scenes/Preloader';
 import { BubbleDestroyScene } from './scenes/BubbleDestroyScene';
 
-// Find out more information about the Game Config at:
-// https://docs.phaser.io/api-documentation/typedef/types-core#gameconfig
 const config: Phaser.Types.Core.GameConfig = {
-    type: AUTO,
-    width: 1024,
-    height: 768,
+    type: Phaser.CANVAS,
+    width: window.innerWidth,
     parent: 'game-container',
-    backgroundColor: '#028af8',
+    height: window.innerHeight,
      physics: {
         default: 'arcade',
         arcade: { debug: false },
@@ -29,7 +26,6 @@ const config: Phaser.Types.Core.GameConfig = {
 const StartGame = (parent: string) => {
 
     return new Game({ ...config, parent });
-
 }
 
 export default StartGame;
