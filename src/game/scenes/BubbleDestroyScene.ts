@@ -18,10 +18,11 @@ export class BubbleDestroyScene extends Phaser.Scene
     private blackOverlayHeight: number = 0;
     private overlayTimerEvent!: Phaser.Time.TimerEvent;
     private overlayDescendStart: number = 7000;
-    private overlayDescendDelay: number = 1200;
+    private overlayDescendDelay: number = 1000;
     private inputLeft: boolean = false;
     private inputRight: boolean = false;
     private inputFire: boolean = false;
+    private velocityX: number = 0;
 
     constructor()
     {
@@ -134,8 +135,16 @@ export class BubbleDestroyScene extends Phaser.Scene
         });
     }
 
+    resetPreviousState(){
+        this.velocityX = 0;
+        this.blackOverlayHeight = 0;
+    }
+
     create()
     {
+        //reset old values
+        this.resetPreviousState();
+
         const { width, height } = this.cameras.main;
         this.cameras.main.setBackgroundColor(0xf2f2f2);
         const halfHeight = height / 2;
@@ -233,7 +242,7 @@ export class BubbleDestroyScene extends Phaser.Scene
         // Every 3 seconds, spawn 3 more bubbles
         this.time.addEvent({
             delay: 3000,
-            callback: () => spawnBubbles(3),
+            callback: () => spawnBubbles(5),
             loop: true
         });
 
@@ -335,13 +344,19 @@ export class BubbleDestroyScene extends Phaser.Scene
         let moveRight = this.cursors.right?.isDown || this.inputRight;
         let fire = this.cursors.space?.isDown || this.inputFire;
 
-        if (moveLeft)
-        {
-            this.bar.setVelocityX(-300);
-        } else if (moveRight)
-        {
-            this.bar.setVelocityX(300);
+        if (moveLeft) {
+            if(this.velocityX > 0) this.velocityX = 0;
+            this.velocityX -= 10; // pressing left adds negative velocity
         }
+
+        if (moveRight) {
+            if(this.velocityX < 0) this.velocityX = 0;
+            this.velocityX += 10; // pressing right adds positive velocity
+        }
+
+        // Move the bar left or right based on input
+       this.bar.setVelocityX(this.velocityX);
+        
         // else if (this.cursors.up?.isDown){
         //     this.bar.setVelocityY(-300);
         // } else if (this.cursors.down?.isDown) {
