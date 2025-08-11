@@ -10,10 +10,10 @@ const config: Phaser.Types.Core.GameConfig = {
   parent: 'game-container', // will be overwritten by StartGame parent argument
   backgroundColor: '#2c556aff',
   scale: {
-    mode: Phaser.Scale.RESIZE,          // important for responsive resizing
+    mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: window.innerWidth,
-    height: window.innerHeight
+    width: 800,
+    height: 600
   },
   physics: { default: 'arcade', arcade: { debug: false }},
   scene: [ Boot, Preloader, MainMenu, BubbleDestroyScene, GameOver ]

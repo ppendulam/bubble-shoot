@@ -18,11 +18,12 @@ export class BubbleDestroyScene extends Phaser.Scene
     private blackOverlayHeight: number = 0;
     private overlayTimerEvent!: Phaser.Time.TimerEvent;
     private overlayDescendStart: number = 7000;
-    private overlayDescendDelay: number = 1000;
+    private overlayDescendDelay: number = 1200;
     private inputLeft: boolean = false;
     private inputRight: boolean = false;
     private inputFire: boolean = false;
     private velocityX: number = 0;
+    private scoreText!: Phaser.GameObjects.Text;
 
     constructor()
     {
@@ -138,12 +139,19 @@ export class BubbleDestroyScene extends Phaser.Scene
     resetPreviousState(){
         this.velocityX = 0;
         this.blackOverlayHeight = 0;
+        this.bubblesDestroyed = 0;
     }
 
     create()
     {
         //reset old values
         this.resetPreviousState();
+        this.scoreText = this.add.text(10, 10, 'Score: 0', {
+            fontFamily: 'Arial',
+            fontSize: '24px',
+            color: '#000000',
+            backgroundColor: '#ffffff'
+        }).setScrollFactor(0);
 
         const { width, height } = this.cameras.main;
         this.cameras.main.setBackgroundColor(0xf2f2f2);
@@ -152,7 +160,7 @@ export class BubbleDestroyScene extends Phaser.Scene
         const shooterSize = 20;
 
         // Create the bar sprite near the bottom center
-        this.bar = this.physics.add.sprite(width / 2, height - 30, 'bar');
+        this.bar = this.physics.add.sprite(width / 2, height - 10, 'bar');
         this.bar.setImmovable(true);
         this.bar.setCollideWorldBounds(true);
         (this.bar.body as Phaser.Physics.Arcade.Body).allowGravity = false;
@@ -236,7 +244,7 @@ export class BubbleDestroyScene extends Phaser.Scene
             }
         };
         // Spawn initial 10 bubbles
-        spawnBubbles(10);
+        spawnBubbles(15);
 
         this.UpdateBlackOverlay();
         // Every 3 seconds, spawn 3 more bubbles
@@ -253,7 +261,8 @@ export class BubbleDestroyScene extends Phaser.Scene
             (bullet as Phaser.Physics.Arcade.Image).disableBody(true, true);
             (bubble as Phaser.Physics.Arcade.Image).destroy();
             this.bubblesDestroyed++;
-            if (this.bubblesDestroyed >= 50)
+            this.scoreText.setText(`Score: ${this.bubblesDestroyed}`);
+            if (this.bubblesDestroyed >= 75) // Win condition
             {
                 this.GameOver('win');
             }
@@ -304,13 +313,32 @@ export class BubbleDestroyScene extends Phaser.Scene
         // BUTTON DIMENSIONS & POSITIONS
         const buttonWidth = 80;
         const buttonHeight = 80;
-        const screenY = this.scale.height - buttonHeight - 10; // 10px margin from bottom
+        const screenY = this.scale.height - buttonHeight - 30; // 10px margin from bottom
         // LEFT BUTTON
         const leftButton = this.add.circle(80, screenY, buttonWidth, 0xffc0cb, 0.4).setInteractive().setScrollFactor(0);
         // RIGHT BUTTON
         const rightButton = this.add.circle(this.scale.width - 80, screenY, buttonWidth, 0xffc0cb, 0.4).setInteractive().setScrollFactor(0);
         // FIRE BUTTON
         const fireButton = this.add.circle(this.scale.width / 2, screenY, buttonWidth, 0xffc0cb, 0.4).setInteractive().setScrollFactor(0);
+
+        // const fireButtonSize = 80;
+        // const fireButtonGraphics = this.add.graphics();
+
+        // // Draw a triangle pointing upwards
+        // fireButtonGraphics.fillStyle(0xffc0cb, 0.4);
+        // fireButtonGraphics.beginPath();
+        // fireButtonGraphics.moveTo(fireButtonSize / 2, 0);                     // Top
+        // fireButtonGraphics.lineTo(fireButtonSize, fireButtonSize);            // Bottom-right
+        // fireButtonGraphics.lineTo(0, fireButtonSize);                         // Bottom-left
+        // fireButtonGraphics.closePath();
+        // fireButtonGraphics.fillPath();
+
+        // // Generate texture from graphics
+        // const fireButtonKey = 'fireButtonTriangle';
+        // const fireButton = fireButtonGraphics.generateTexture(fireButtonKey, fireButtonSize, fireButtonSize);
+        // fireButtonGraphics.destroy();
+
+
 
         // State flags so you can access from `update`
         this.inputLeft = false;
@@ -409,9 +437,5 @@ export class BubbleDestroyScene extends Phaser.Scene
             this.overlayTimerEvent.remove(false);
         }
         this.scene.start('GameOver', { result: gameStatus });
-    }
-    changeScene()
-    {
-        this.scene.start('GameOver');
     }
 }
