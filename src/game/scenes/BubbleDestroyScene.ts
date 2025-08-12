@@ -250,7 +250,7 @@ export class BubbleDestroyScene extends Phaser.Scene
         // Every 3 seconds, spawn 3 more bubbles
         this.time.addEvent({
             delay: 3000,
-            callback: () => spawnBubbles(5),
+            callback: () => spawnBubbles(7),
             loop: true
         });
 
